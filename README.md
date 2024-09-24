@@ -39,9 +39,7 @@ Each plan has a unique id, defined as `keccack256(abi.encode(usr, tag, data, non
 
 ## Lifecycle
 
-Proposals can be created by any signer via a call to `propose(usr, tag, data)`. This assigns a nonce.
-
-Once proposed, signers can approve a proposal via a call to `confirm(usr, tag, data, nonce)`.
+signers can confirm a proposal via a call to `confirm(usr, tag, data, nonce)`.
 
 Once the approval threshold has been met, anyone can execute the proposal via a call to `exec(usr, tag, data, nonce)`.
 
@@ -75,9 +73,10 @@ it's `proxy` instead of the root contract itself.
 ### Proposal Lifecycle
 
 - A proposal cannot be executed if it does not have at least `min` confirmations
-- A proposal cannot be confirmed if it has not been first proposed
-- A proposal cannot be executed more than once
+- Each signer can confirm a proposal only once
+- Signers cannot confirm already executed proposals
 - The bytecode of the proposal target cannot change between proposal and execution time
+- A proposal cannot be executed more than once
 - Proposals that revert are not considered as executed
 
 - Proposals can only be confirmed by signers

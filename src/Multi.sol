@@ -4,7 +4,7 @@ contract Multi {
 
   // -- DATA ---------------------------------------------------------------------------------------
 
-  // address => owner status
+  // address => signer status
   mapping (address => bool) public signers;
   // total number of signers
   uint public size;
@@ -13,15 +13,11 @@ contract Multi {
   mapping (bytes32 => uint) public confirmations;
   // proposal hash => approver => confrmation
   mapping (bytes32 => mapping (address => bool)) public confirmed;
-  // proposal hash => proposed
-  mapping (bytes32 => bool) public proposed;
   // proposal hash => executed
   mapping (bytes32 => bool) public executed;
 
   // approval threshold
   uint public min;
-  // unique per proposal id
-  uint public next;
 
   // proposal executor
   Proxy immutable public proxy;
@@ -32,7 +28,6 @@ contract Multi {
   event Deny(address usr);
   event Min(uint val);
 
-  event Propose(address usr, bytes32 tag, bytes data, uint nonce);
   event Confirm(address signer, address usr, bytes32 tag, bytes data, uint nonce);
   event Exec(address usr, bytes32 tag, bytes data, uint nonce);
 
@@ -50,20 +45,11 @@ contract Multi {
 
   // --- PROPOSAL LIFECYCLE ------------------------------------------------------------------------
 
-  function propose(address usr, bytes32 tag, bytes calldata data) external {
-    require(signers[msg.sender], "unauthorized");
-
-    proposed[hash(usr, tag, data, next)] = true;
-    emit Propose(usr, tag, data, next);
-
-    next += 1;
-  }
-
   function confirm(address usr, bytes32 tag, bytes calldata data, uint nonce) external {
     bytes32 id = hash(usr, tag, data, nonce);
 
     require(signers[msg.sender], "unauthorized");
-    require(proposed[id], "not proposed");
+    require(!executed[id], "already executed");
     require(!confirmed[id][msg.sender], "already confirmed");
 
     confirmations[id] += 1;
@@ -76,7 +62,6 @@ contract Multi {
     bytes32 id = hash(usr, tag, data, nonce);
 
     // checks
-    require(proposed[id], "not proposed");
     require(!executed[id], "already executed");
     require(confirmations[id] > min, "insufficient confirmations");
     require(soul(usr) == tag, "codehash does not match tag");
@@ -95,8 +80,10 @@ contract Multi {
 
   function rely(address usr) public {
     require(msg.sender == address(proxy), "unauthorized");
+
     signers[usr] = true;
     size += 1;
+
     emit Rely(usr);
   }
 
@@ -104,15 +91,19 @@ contract Multi {
     require(msg.sender == address(proxy), "unauthorized");
     require(size - 1 >= 1, "cannot remove last signer");
     require(min <= size - 1, "cannot reduce size below min");
+
     signers[usr] = false;
     size -= 1;
+
     emit Deny(usr);
   }
 
   function setMin(uint val) public {
     require(msg.sender == address(proxy), "unauthorized");
     require(val <= size, "min cannot be larger than size");
+
     min = val;
+
     emit Min(val);
   }
 

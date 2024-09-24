@@ -11,7 +11,7 @@ contract MultiTest is Test {
         multi = new Multi();
     }
 
-    function test_trivial() public {
+    function test_trivial() public pure {
         assert(true);
     }
 }
