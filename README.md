@@ -1,6 +1,6 @@
 # Multi
 
-DEV STATUS: untested, definitely broken, unsuitable for real world usage.
+**UNTESTED, DEFINITELY BROKEN, DO NOT USE WITH REAL MONEY**
 
 This is a minimal EVM multisig designed for use in low volume, high security cold storage setups.
 There is a strong focus on reducing the audit surface area, keeping the number of potential
