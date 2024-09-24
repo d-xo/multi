@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright 2024 dxo
 pragma solidity ^0.8.27;
 
 contract Multi {
