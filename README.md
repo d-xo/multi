@@ -78,7 +78,6 @@ it's `proxy` instead of the root contract itself.
 - The bytecode of the proposal target cannot change between proposal and execution time
 - A proposal cannot be executed more than once
 - Proposals that revert are not considered as executed
-
 - Proposals can only be confirmed by signers
 - Proposals can be executed by anyone
 - Proposals can only be created by signers
