@@ -30,8 +30,8 @@ contract Multi {
   event Deny(address usr);
   event Min(uint val);
 
-  event Confirm(address signer, address usr, bytes32 tag, bytes data, uint nonce);
-  event Exec(address usr, bytes32 tag, bytes data, uint nonce);
+  event Confirm(address signer, address usr, bytes data, uint nonce);
+  event Exec(address usr, bytes data, uint nonce);
 
   // -- SETUP --------------------------------------------------------------------------------------
 
@@ -47,8 +47,8 @@ contract Multi {
 
   // --- PROPOSAL LIFECYCLE ------------------------------------------------------------------------
 
-  function confirm(address usr, bytes32 tag, bytes calldata data, uint nonce) external {
-    bytes32 id = hash(usr, tag, data, nonce);
+  function confirm(address usr, bytes calldata data, uint nonce) external {
+    bytes32 id = hash(usr, data, nonce);
 
     require(signers[msg.sender], "unauthorized");
     require(!executed[id], "already executed");
@@ -57,16 +57,15 @@ contract Multi {
     confirmations[id] += 1;
     confirmed[id][msg.sender] = true;
 
-    emit Confirm(msg.sender, usr, tag, data, nonce);
+    emit Confirm(msg.sender, usr, data, nonce);
   }
 
-  function exec(address usr, bytes32 tag, bytes calldata data, uint nonce) external {
-    bytes32 id = hash(usr, tag, data, nonce);
+  function exec(address usr, bytes calldata data, uint nonce) external {
+    bytes32 id = hash(usr, data, nonce);
 
     // checks
     require(!executed[id], "already executed");
-    require(confirmations[id] > min, "insufficient confirmations");
-    require(soul(usr) == tag, "codehash does not match tag");
+    require(confirmations[id] >= min, "insufficient confirmations");
 
     // effects
     executed[id] = true;
@@ -75,7 +74,7 @@ contract Multi {
     proxy.exec(usr, data);
 
     // logs
-    emit Exec(usr, tag, data, nonce);
+    emit Exec(usr, data, nonce);
   }
 
   // --- ADMIN ------------------------------------------------------------------------------------
@@ -91,8 +90,8 @@ contract Multi {
 
   function deny(address usr) public {
     require(msg.sender == address(proxy), "unauthorized");
-    require(size - 1 >= 1, "cannot remove last signer");
-    require(min <= size - 1, "cannot reduce size below min");
+    require(size > 0, "cannot remove last signer");
+    require(min < size, "cannot reduce size below min");
 
     signers[usr] = false;
     size -= 1;
@@ -100,9 +99,10 @@ contract Multi {
     emit Deny(usr);
   }
 
-  function setMin(uint val) public {
+  function move(uint val) public {
     require(msg.sender == address(proxy), "unauthorized");
     require(val <= size, "min cannot be larger than size");
+    require(val > 0, "at least one confirmation must be required");
 
     min = val;
 
@@ -111,12 +111,8 @@ contract Multi {
 
   // --- UTIL -------------------------------------------------------------------------------------
 
-  function hash(address usr, bytes32 tag, bytes memory data, uint nonce) public pure returns (bytes32) {
-    return keccak256(abi.encode(usr, tag, data, nonce));
-  }
-
-  function soul(address usr) internal view returns (bytes32 tag) {
-    assembly { tag := extcodehash(usr) }
+  function hash(address usr, bytes memory data, uint nonce) public pure returns (bytes32) {
+    return keccak256(abi.encode(usr, data, nonce));
   }
 }
 

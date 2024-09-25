@@ -21,7 +21,7 @@ only be executed as part of an approved proposal:
 
 - `rely(usr)`: adds a new signer
 - `deny(usr)`: removes a signer
-- `setMin(val)`: sets the minimum approval threshhold
+- `move(val)`: sets the minimum approval threshhold
 
 ## Proposals
 
@@ -31,17 +31,16 @@ confirmation threshold is passed.
 A proposal consists of:
 
 - `usr`: address to delegatecall into
-- `tag`: the expected codehash of usr
 - `data`: calldata to use
 - `nonce`: a unique per proposal id
 
-Each plan has a unique id, defined as `keccack256(abi.encode(usr, tag, data, nonce))`
+Each proposal has a unique id, defined as `keccack256(abi.encode(usr, data, nonce))`
 
 ## Lifecycle
 
-signers can confirm a proposal via a call to `confirm(usr, tag, data, nonce)`.
+signers can confirm a proposal via a call to `confirm(usr, data, nonce)`.
 
-Once the approval threshold has been met, anyone can execute the proposal via a call to `exec(usr, tag, data, nonce)`.
+Once the approval threshold has been met, anyone can execute the proposal via a call to `exec(usr, data, nonce)`.
 
 ## Proxy Usage
 
