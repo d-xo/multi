@@ -83,6 +83,7 @@ contract Multi {
 
   function rely(address usr) public {
     require(msg.sender == address(proxy), "unauthorized");
+    require(!signers[usr], "usr must not already be a signer");
 
     signers[usr] = true;
     size += 1;
@@ -94,6 +95,7 @@ contract Multi {
     require(msg.sender == address(proxy), "unauthorized");
     require(size > 0, "cannot remove last signer");
     require(min < size, "cannot reduce size below min");
+    require(signers[usr], "usr must already be a signer");
 
     signers[usr] = false;
     size -= 1;
