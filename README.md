@@ -6,10 +6,10 @@ This is a minimal EVM multisig designed for use in low volume, high security col
 There is a strong focus on reducing the audit surface area, keeping the number of potential
 execution branches small, and using a style that supports mechanized reasoning.
 
-Multi is a single Solidity file. It has no imports or dependencies. It contains no loops
-and each function has only a single succesful execution path. There is a single call into unknown
-code, and dynamically sized `bytes` are passed in via calldata (both unfortunately unavoidable in
-the context of a multisig).
+Multi is a single Solidity file. It has no imports or dependencies. It contains no loops, and the
+self recursion depth is limited to 1. Most functions has only a single succesful execution path.
+There is a single call into unknown code, and dynamically sized `bytes` are used (both unfortunately
+unavoidable in the context of a multisig).
 
 ## Signers and Thresholds
 
@@ -30,11 +30,12 @@ confirmation threshold is passed.
 
 A proposal consists of:
 
-- `usr`: address to delegatecall into
-- `data`: calldata to use
-- `nonce`: a unique per proposal id
+- `address usr`: address to delegatecall into
+- `bytes data`: calldata to use
+- `uint chain`: the id of the deployed chain
+- `uint nonce`: a unique per proposal id
 
-Each proposal has a unique id, defined as `keccack256(abi.encode(usr, data, nonce))`
+Each proposal has a unique id, defined as `keccack256(abi.encode(usr, data, chain, nonce))`
 
 ## Lifecycle
 
@@ -77,6 +78,7 @@ it's `proxy` instead of the root contract itself.
 - The bytecode of the proposal target cannot change between proposal and execution time
 - A proposal cannot be executed more than once
 - Proposals that revert are not considered as executed
+- Proposal confirmations cannot be replayed between forks with different chain ids.
 - Proposals can only be confirmed by signers
 - Proposals can be executed by anyone
 - Proposals can only be created by signers

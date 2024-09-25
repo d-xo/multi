@@ -30,8 +30,8 @@ contract Multi {
   event Deny(address usr);
   event Min(uint val);
 
-  event Confirm(address signer, address usr, bytes data, uint nonce);
-  event Exec(address usr, bytes data, uint nonce);
+  event Confirm(address signer, address usr, bytes data, uint chain, uint nonce);
+  event Exec(address usr, bytes data, uint chain, uint nonce);
 
   // -- SETUP --------------------------------------------------------------------------------------
 
@@ -47,8 +47,8 @@ contract Multi {
 
   // --- PROPOSAL LIFECYCLE ------------------------------------------------------------------------
 
-  function confirm(address usr, bytes calldata data, uint nonce) external {
-    bytes32 id = hash(usr, data, nonce);
+  function confirm(address usr, bytes calldata data, uint chain, uint nonce) external {
+    bytes32 id = hash(usr, data, chain, nonce);
 
     require(signers[msg.sender], "unauthorized");
     require(!executed[id], "already executed");
@@ -57,15 +57,17 @@ contract Multi {
     confirmations[id] += 1;
     confirmed[id][msg.sender] = true;
 
-    emit Confirm(msg.sender, usr, data, nonce);
+    emit Confirm(msg.sender, usr, data, chain, nonce);
   }
 
-  function exec(address usr, bytes calldata data, uint nonce) external {
-    bytes32 id = hash(usr, data, nonce);
+  function exec(address usr, bytes calldata data, uint chain, uint nonce) external {
+    bytes32 id = hash(usr, data, chain, nonce);
 
     // checks
+    require(block.chainid == chain, "chainid mismatch");
     require(!executed[id], "already executed");
     require(confirmations[id] >= min, "insufficient confirmations");
+    require(msg.sender != address(proxy), "recursive exec encountered");
 
     // effects
     executed[id] = true;
@@ -74,7 +76,7 @@ contract Multi {
     proxy.exec(usr, data);
 
     // logs
-    emit Exec(usr, data, nonce);
+    emit Exec(usr, data, chain, nonce);
   }
 
   // --- ADMIN ------------------------------------------------------------------------------------
@@ -111,8 +113,8 @@ contract Multi {
 
   // --- UTIL -------------------------------------------------------------------------------------
 
-  function hash(address usr, bytes memory data, uint nonce) public pure returns (bytes32) {
-    return keccak256(abi.encode(usr, data, nonce));
+  function hash(address usr, bytes memory data, uint chain, uint nonce) public pure returns (bytes32) {
+    return keccak256(abi.encode(usr, data, chain, nonce));
   }
 }
 
