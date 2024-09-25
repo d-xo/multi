@@ -118,6 +118,8 @@ contract Multi {
   function hash(address usr, bytes memory data, uint chain, uint nonce) public pure returns (bytes32) {
     return keccak256(abi.encode(usr, data, chain, nonce));
   }
+
+  receive() external payable {}
 }
 
 contract Proxy {
