@@ -32,10 +32,9 @@ A proposal consists of:
 
 - `address usr`: address to delegatecall into
 - `bytes data`: calldata to use
-- `uint chain`: the id of the deployed chain
 - `uint nonce`: a unique per proposal id
 
-Each proposal has a unique id, defined as `keccack256(abi.encode(usr, data, chain, nonce))`
+Each proposal has a unique id, defined as `keccack256(abi.encode(usr, data, nonce))`
 
 ## Lifecycle
 
@@ -75,10 +74,8 @@ it's `proxy` instead of the root contract itself.
 - A proposal cannot be executed if it does not have at least `min` confirmations
 - Each signer can confirm a proposal only once
 - Signers cannot confirm already executed proposals
-- The bytecode of the proposal target cannot change between proposal and execution time
 - A proposal cannot be executed more than once
 - Proposals that revert are not considered as executed
-- Proposal confirmations cannot be replayed between forks with different chain ids.
 - Proposals can only be confirmed by signers
 - Proposals can be executed by anyone
 - Proposals can only be created by signers
